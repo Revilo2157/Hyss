@@ -126,9 +126,8 @@ def send_message(service, user_id, message):
   except (errors.HttpError, error):
     print('An error occurred: %s' % error)
 
-def dataOven(num):
+def dataOven(num, username):
     scope = 'user-read-recently-played'
-    username = 'revilo2157'
     token = util.prompt_for_user_token(username,
                                        scope,
                                        client_id='d59d161a8be9454ca86be7a9270c7a18',
@@ -209,8 +208,11 @@ def reWriteCSV(dictionary):
     writer.writerow(header)
     writer.writerows(inputData)
 
-songTracker = dataOven(50)[0]
-artistTracker = dataOven(50)[1]
+user = input("Email: ")
+username = input("Spotify Username: ")
+
+songTracker = dataOven(50, username)[0]
+artistTracker = dataOven(50,username)[1]
 
 reWriteCSV(songTracker)
 
@@ -222,8 +224,6 @@ day = datetime.datetime.today().day
 month = datetime.datetime.today().month
 masterdict[month] = {}
 masterdict[month][day] = songTracker
-
-user = input("Email: ")
 
 while (True):
 
@@ -237,7 +237,7 @@ while (True):
         masterdict[month][day] = {}
         sendEmail(user)
 
-    plate = dataOven(10)
+    plate = dataOven(10, username)
 
     mainDish = plate[0]
     dessert = plate[1]
