@@ -10,7 +10,7 @@ Instructions:
 3. Download the files onto the virtual machine from this repository.
 3. Use Spyder to run the SpotipySetup.py script to install the necessary packages.
 4. Run the Hyss.py script and input the requested data onto the python console.
-5. Sign in to spotify and copy the link you are redirected to. It should look like http//:localhost.com
+5. Sign in to spotify and copy the link you are redirected to. It should look like https://localhost.com
 6. Go back to the console, add a space and paste the link you just copied.
 7. You should see your ten most recent songs.
 8. Enjoy!
