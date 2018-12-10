@@ -106,7 +106,7 @@ def sendEmail(to):
 
     message = create_message_with_attachment(sender, to, subject, body, filename)
 
-    send_message(service, sender, message)
+    send_message(service, message)
 
 def dataOven(num, username):
     scope = 'user-read-recently-played'
