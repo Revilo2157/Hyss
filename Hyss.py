@@ -22,6 +22,8 @@ from time import sleep
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime
+import googleapiclient.errors as errors
+
 
 def create_message_with_attachment(sender, to, subject, body, file):
 
@@ -61,7 +63,7 @@ def create_message_with_attachment(sender, to, subject, body, file):
 
   return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
 
-def send_message(service, user_id, message):
+def send_message(service, message):
   """Send an email message.
 
   Args:
@@ -75,11 +77,11 @@ def send_message(service, user_id, message):
   """
 
   try:
-    message = (service.users().messages().send(userId=user_id, body=message)
+    message = (service.users().messages().send(userId="me", body=message)
                .execute())
     print('Message Id: %s' % message['id'])
     return message
-  except (errors.HttpError, error):
+  except errors.HttpError as error :
     print('An error occurred: %s' % error)
 
 def sendEmail(to):
@@ -99,32 +101,12 @@ def sendEmail(to):
 
     subject = "Song Data from %d/%d" % (lastmonth, lastday)
     body = "Top Ten Songs from yesterday!"
-    sender = "orodas2157@gmail.com"
+    sender = "HyssMusicTracker@gmail.com"
     filename = "Top10Songs.png"
 
     message = create_message_with_attachment(sender, to, subject, body, filename)
 
     send_message(service, sender, message)
-
-def send_message(service, user_id, message):
-  """Send an email message.
-
-  Args:
-    service: Authorized Gmail API service instance.
-    user_id: User's email address. The special value "me"
-    can be used to indicate the authenticated user.
-    message: Message to be sent.
-
-  Returns:
-    Sent Message.
-  """
-  try:
-    message = (service.users().messages().send(userId=user_id, body=message)
-               .execute())
-    print('Message Id: %s' % message['id'])
-    return message
-  except (errors.HttpError, error):
-    print('An error occurred: %s' % error)
 
 def dataOven(num, username):
     scope = 'user-read-recently-played'
@@ -211,24 +193,28 @@ def reWriteCSV(dictionary):
 user = input("Email: ")
 username = input("Spotify Username: ")
 
-songTracker = dataOven(50, username)[0]
-artistTracker = dataOven(50,username)[1]
+songTracker = dataOven(10, username)[0]
+artistTracker = dataOven(10,username)[1]
 
 reWriteCSV(songTracker)
 
 leftOvers = []
 
 masterdict = {}
-delta = datetime.timedelta(days=1)
-day = datetime.datetime.today().day
-month = datetime.datetime.today().month
+offset = datetime.timedelta(hours=5)
+today = datetime.datetime.today() - offset
+day = today.day
+month = today.month
 masterdict[month] = {}
 masterdict[month][day] = songTracker
+makePlot(songTracker)
+sendEmail(user)
 
 while (True):
 
-    day = datetime.datetime.today().day
-    month = datetime.datetime.today().month
+    today = datetime.datetime.today() - offset
+    day = today.day
+    month = today.month
 
     if month not in masterdict:
         masterdict[month] = {}
