@@ -12,8 +12,10 @@ Instructions:
 4. Run the Hyss.py script and input the requested data onto the python console.
 5. Sign in to spotify and copy the link you are redirected to. It should look like https://localhost.com
 6. Go back to the console, add a space and paste the link you just copied.
-7. You should see your ten most recent songs.
-8. Enjoy!
+7. You will be redirected to a gmail sign in.
+8. You will need to sign in to a gmail I will provide (text/email me for the username and password)
+9. You should see your ten most recent songs.
+10. Enjoy!
 
 
 If downloading from git does not work, download the files individually to avoid creating a .zip folder
