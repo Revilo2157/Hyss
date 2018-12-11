@@ -193,8 +193,7 @@ def reWriteCSV(dictionary):
 user = input("Email: ")
 username = input("Spotify Username: ")
 
-songTracker = dataOven(10, username)[0]
-artistTracker = dataOven(10,username)[1]
+songTracker = dataOven(50, username)[0]
 
 reWriteCSV(songTracker)
 
