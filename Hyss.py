@@ -17,51 +17,47 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import spotipy
 import spotipy.util as util
-import csv
 from time import sleep
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 import googleapiclient.errors as errors
+import pickle
+from collections import Counter
 
+def create_message_with_attachment(sender, to, subject, body, file = ""):
+    message = MIMEMultipart()
+    message['to'] = to
+    message['from'] = sender
+    message['subject'] = subject
 
-def create_message_with_attachment(sender, to, subject, body, file):
+    msg = MIMEText(body)
+    message.attach(msg)
 
-  message = MIMEMultipart()
-  message['to'] = to
-  message['from'] = sender
-  message['subject'] = subject
+    if file != "":
+        content_type, encoding = mimetypes.guess_type(file)
+        if content_type is None or encoding is not None:
+            content_type = 'application/octet-stream'
+        main_type, sub_type = content_type.split('/', 1)
+        if main_type == 'text':
+            fp = open(file, 'rb')
+            msg = MIMEText(fp.read(), _subtype=sub_type)
+            fp.close()
+        elif main_type == 'image':
+            fp = open(file, 'rb')
+            msg = MIMEImage(fp.read(), _subtype=sub_type)
+            fp.close()
+        else:
+            fp = open(file, 'rb')
+            msg = MIMEBase(main_type, sub_type)
+            msg.set_payload(fp.read())
+            fp.close()
 
-  msg = MIMEText(body)
-  message.attach(msg)
+        filename = os.path.basename(file)
+        msg.add_header('Content-Disposition', 'attachment', filename=filename)
+        message.attach(msg)
 
-  content_type, encoding = mimetypes.guess_type(file)
-
-  if content_type is None or encoding is not None:
-    content_type = 'application/octet-stream'
-  main_type, sub_type = content_type.split('/', 1)
-  if main_type == 'text':
-    fp = open(file, 'rb')
-    msg = MIMEText(fp.read(), _subtype=sub_type)
-    fp.close()
-  elif main_type == 'image':
-    fp = open(file, 'rb')
-    msg = MIMEImage(fp.read(), _subtype=sub_type)
-    fp.close()
-  elif main_type == 'audio':
-    fp = open(file, 'rb')
-    msg = MIMEAudio(fp.read(), _subtype=sub_type)
-    fp.close()
-  else:
-    fp = open(file, 'rb')
-    msg = MIMEBase(main_type, sub_type)
-    msg.set_payload(fp.read())
-    fp.close()
-  filename = os.path.basename(file)
-  msg.add_header('Content-Disposition', 'attachment', filename=filename)
-  message.attach(msg)
-
-  return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
+    return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
 
 def send_message(service, message):
   """Send an email message.
@@ -84,7 +80,25 @@ def send_message(service, message):
   except errors.HttpError as error :
     print('An error occurred: %s' % error)
 
-def sendEmail(to):
+def sendVerif(to):
+
+    SCOPES = 'https://www.googleapis.com/auth/gmail.send'
+    store = file.Storage('token.json')
+    creds = store.get()
+    if not creds or creds.invalid:
+        flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+        creds = tools.run_flow(flow, store)
+    service = build('gmail', 'v1', http=creds.authorize(Http()))
+
+    subject = "You\'re all set!"
+    body = "Your Hyss Music Tracker is ready to start logging your music!"
+    sender = "HyssMusicTracker@gmail.com"
+
+    message = create_message_with_attachment(sender, to, subject, body)
+
+    send_message(service, message)
+
+def sendEmail(to, which = 0):
 
     SCOPES = 'https://www.googleapis.com/auth/gmail.send'
     store = file.Storage('token.json')
@@ -99,10 +113,15 @@ def sendEmail(to):
     lastmonth = yesterday.month
     lastday = yesterday.day
 
-    subject = "Song Data from %d/%d" % (lastmonth, lastday)
-    body = "Top Ten Songs from yesterday!"
+    if which == 1:
+        subject = "Song Data from %s" % (yesterday.strftime("%B"))
+        body = "Top Ten Songs from %s!" % (yesterday.strftime("%B"))
+        filename = "Top10Monthly.png"
+    else:
+        subject = "Song Data from %d/%d" % (lastmonth, lastday)
+        body = "Top Ten Songs from yesterday!"
+        filename = "Top10Songs.png"
     sender = "HyssMusicTracker@gmail.com"
-    filename = "Top10Songs.png"
 
     message = create_message_with_attachment(sender, to, subject, body, filename)
 
@@ -118,44 +137,31 @@ def dataOven(num, username):
 
     sp = spotipy.Spotify(auth=token)
     order = sp._get('me/player/recently-played', limit=num)
-    servedData = []
-    mainDish = {}
-    dessertData = {}
+
+    songs = []
     rawData = order['items']
 
     for i in range(0, len(rawData)):
-        cutData = rawData[i]
-        cookedData = cutData['track']
+        songData = rawData[i]
+        songInfo = songData['track']
 
-        saltedData = cookedData['artists']
-        sweetenedData = saltedData[0]
-        caramelizedData = sweetenedData['name']
+        artistInfo = songInfo['artists']
+        nameLoc = artistInfo[0]
+        artist = nameLoc['name']
+        songName = songInfo['name']
 
-        preparedData = cookedData['name']
+        songs.append((songName, artist))
 
-        if preparedData in mainDish:
-            mainDish[preparedData][1] += 1
-        else:
-            mainDish[preparedData] = [caramelizedData, 1]
-
-        if caramelizedData in dessertData:
-            dessertData[caramelizedData] += 1
-        else:
-            dessertData[caramelizedData] = 1
-
-    servedData.append(mainDish)
-    servedData.append(dessertData)
-
-    return servedData
+    return songs
 
 def getPlays(iterable):
-    return iterable[2]
+    return iterable[1]
 
-def makePlot(dictionary):
+def makePlot(dictionary, which = 0):
 
     inputData = []
     for n in list(dictionary.keys()):
-        inputData.append([n, dictionary[n][0], dictionary[n][1]])
+        inputData.append([n, dictionary[n]])
     inputData.sort(key=getPlays, reverse=True)
 
     top10 = []
@@ -167,7 +173,7 @@ def makePlot(dictionary):
 
     for i in range(0, max):
         song = inputData[i][0]
-        listens = inputData[i][2]
+        listens = inputData[i][1]
         top10.append(song)
         top10values.append(listens)
     ticks = np.arange(len(top10))
@@ -177,37 +183,51 @@ def makePlot(dictionary):
     plt.xlabel('Listens')
     plt.title('Top 10 Songs')
     plt.tight_layout()
-    plt.savefig('Top10Songs')
 
-def reWriteCSV(dictionary):
-    inputData = []
-    for n in list(dictionary.keys()):
-        inputData.append([n, dictionary[n][0], dictionary[n][1]])
-    inputData.sort(key=getPlays, reverse=True)
-    csvfile = open('HissData.csv', 'w')
-    writer = csv.writer(csvfile)
-    header = ['Song', 'Artist', 'Listens']
-    writer.writerow(header)
-    writer.writerows(inputData)
+    if which == 1:
+        plt.savefig('Top10Monthly')
+    else:
+        plt.savefig('Top10Songs')
 
-user = input("Email: ")
-username = input("Spotify Username: ")
+def editDict(dict, list):
+    for n in list:
+        new = n[0]
+        if new in dict:
+            dict[new] += 1
+        else:
+            dict[new] = 1
+    return dict
 
-songTracker = dataOven(50, username)[0]
-
-reWriteCSV(songTracker)
-
-leftOvers = []
-
-masterdict = {}
 offset = datetime.timedelta(hours=5)
+delta = datetime.timedelta(days=1)
 today = datetime.datetime.today() - offset
 day = today.day
 month = today.month
-masterdict[month] = {}
-masterdict[month][day] = songTracker
-makePlot(songTracker)
-sendEmail(user)
+
+try:
+    f = open("HyssData", "rb+")
+    info = pickle.load(f)
+    masterdict = info[0]
+    user = info[1]
+    username = info[2]
+    flag = 1
+    try:
+        songTracker = masterdict[month][day]
+    except:
+        songTracker = {}
+    print("Logging Resumed")
+
+except:
+    masterdict = {}
+    user = input("Email: ")
+    username = input("Spotify Username: ")
+    flag = 0
+    songTracker = {}
+    with open("HyssData", "wb") as temp:
+        pickle.dump([masterdict, user, username], temp)
+    f = open("HyssData", "rb+")
+
+leftOvers = dataOven(10, username)
 
 while (True):
 
@@ -216,40 +236,38 @@ while (True):
     month = today.month
 
     if month not in masterdict:
+        if masterdict:
+            for n in list(masterdict[month-1].keys()):
+                toAdd = Counter(masterdict[month - 1][n])
+                masterdict[month - 1]["Total"] += Counter(masterdict[month-1]["Total"]) + toAdd
+
+            makePlot(masterdict[month - 1]["Total"], 1)
+            sendEmail(user, 1)
         masterdict[month] = {}
 
     if day not in masterdict[month]:
         masterdict[month][day] = {}
-        sendEmail(user)
+        if flag > 1:
+            makePlot(masterdict[month][day])
+            pickle.dump([masterdict, user, username], f)
+            sendEmail(user)
+        flag = 2
 
-    plate = dataOven(10, username)
+    current = dataOven(10, username)
 
-    mainDish = plate[0]
-    dessert = plate[1]
-
-    mainMenu = list(mainDish.keys())
-    dessertMenu = list(dessert.keys())
-
-    if leftOvers != mainMenu:
-        new = mainMenu[0]
-        if new in songTracker:
-            songTracker[new][1] += 1
-        else:
-            songTracker[new] = mainDish[new]
-
-        if new in masterdict[month][day]:
-            masterdict[month][day][new][1] += 1
-        else:
-            masterdict[month][day][new] = mainDish[new]
-
-        makePlot(masterdict[month][day])
-
+    if leftOvers != current:
+        songTracker = editDict(songTracker, current)
+        masterdict[month][day] = songTracker
         print('\n\nRecently Played')
+        for n in current:
+            print(n[0])
 
-        for i in range(0, len(mainDish)):
-            print(mainMenu[i])
+    leftOvers = current
 
-        reWriteCSV(songTracker)
-    leftOvers = mainMenu
+    if flag == 0:
+        sendVerif(user)
+        flag = 1
 
-    sleep(30)
+
+
+    sleep(5)

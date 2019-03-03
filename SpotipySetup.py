@@ -1,8 +1,9 @@
 import os
 
 print("Installing packages.")
-os.system("pip install spotipy\n"
-          "pip install --upgrade google-api-python-client oauth2client\n")
+os.system("pip3 install spotipy\n"
+          "pip3 install --upgrade google-api-python-client oauth2client\n"
+          "pip3 install matplotlib\n")
 
 try:
     import spotipy
