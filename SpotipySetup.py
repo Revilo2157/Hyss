@@ -8,6 +8,7 @@ os.system("pip3 install spotipy\n"
 try:
     import spotipy
     import googleapiclient
+    import matplotlib
     print("\n\n\nFinished.")
 except:
     print("\n\n\nFailed to download the packages... ")
