@@ -226,6 +226,7 @@ except:
     with open("HyssData", "wb") as temp:
         pickle.dump([masterdict, user, username], temp)
     f = open("HyssData", "rb+")
+    print("Welcome!")
 
 leftOvers = dataOven(10, username)
 
@@ -247,11 +248,10 @@ while (True):
 
     if day not in masterdict[month]:
         masterdict[month][day] = {}
-        if flag > 1:
+        if flag != 1:
             makePlot(masterdict[month][day])
             pickle.dump([masterdict, user, username], f)
             sendEmail(user)
-        flag = 2
 
     current = dataOven(10, username)
 
@@ -264,7 +264,7 @@ while (True):
 
     leftOvers = current
 
-    if flag == 0:
+    if flag != 1:
         sendVerif(user)
         flag = 1
 
