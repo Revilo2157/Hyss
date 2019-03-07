@@ -189,15 +189,6 @@ def makePlot(dictionary, which = 0):
     else:
         plt.savefig('Top10Songs')
 
-def editDict(dict, list):
-    for n in list:
-        new = n[0]
-        if new in dict:
-            dict[new] += 1
-        else:
-            dict[new] = 1
-    return dict
-
 offset = datetime.timedelta(hours=5)
 delta = datetime.timedelta(days=1)
 today = datetime.datetime.today() - offset
@@ -205,8 +196,9 @@ day = today.day
 month = today.month
 
 try:
-    f = open("HyssData", "rb+")
+    f = open("HyssData", "rb")
     info = pickle.load(f)
+    f.close()
     masterdict = info[0]
     user = info[1]
     username = info[2]
@@ -223,9 +215,6 @@ except:
     username = input("Spotify Username: ")
     flag = 0
     songTracker = {}
-    with open("HyssData", "wb") as temp:
-        pickle.dump([masterdict, user, username], temp)
-    f = open("HyssData", "rb+")
     print("Welcome!")
 
 leftOvers = dataOven(10, username)
@@ -248,16 +237,23 @@ while (True):
 
     if day not in masterdict[month]:
         masterdict[month][day] = {}
-        if flag != 1:
+        if flag == 1:
             makePlot(masterdict[month][day])
-            pickle.dump([masterdict, user, username], f)
             sendEmail(user)
 
     current = dataOven(10, username)
 
     if leftOvers != current:
-        songTracker = editDict(songTracker, current)
+        song = current[0][0]
+        if song not in songTracker:
+            songTracker[song] = 1
+        else:
+            songTracker[song] += 1
         masterdict[month][day] = songTracker
+        f = open("HyssData", "wb")
+        pickle.dump([masterdict, user, username], f)
+        f.close()
+
         print('\n\nRecently Played')
         for n in current:
             print(n[0])
@@ -267,7 +263,5 @@ while (True):
     if flag != 1:
         sendVerif(user)
         flag = 1
-
-
 
     sleep(5)
