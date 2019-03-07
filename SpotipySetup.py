@@ -2,11 +2,9 @@ import os
 
 print("Installing packages.")
 
-try:
     os.system("pip3 install spotipy\n"
               "pip3 install --upgrade google-api-python-client oauth2client\n"
               "pip3 install matplotlib\n")
-except:
     os.system("pip install spotipy\n"
               "pip install --upgrade google-api-python-client oauth2client\n"
               "pip install matplotlib\n")
