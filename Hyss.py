@@ -189,12 +189,6 @@ def makePlot(dictionary, which = 0):
     else:
         plt.savefig('Top10Songs')
 
-offset = datetime.timedelta(hours=5)
-delta = datetime.timedelta(days=1)
-today = datetime.datetime.today() - offset
-day = today.day
-month = today.month
-
 try:
     f = open("HyssData", "rb")
     info = pickle.load(f)
@@ -215,9 +209,15 @@ except:
     username = input("Spotify Username: ")
     flag = 0
     songTracker = {}
+
+    with open("HyssData", "wb") as newFile:
+        pickle.dump([masterdict, user, username], newFile)
+
     print("Welcome!")
 
 leftOvers = dataOven(10, username)
+offset = datetime.timedelta(hours=5)
+delta = datetime.timedelta(days=1)
 
 while (True):
 
@@ -227,19 +227,27 @@ while (True):
 
     if month not in masterdict:
         if masterdict:
-            for n in list(masterdict[month-1].keys()):
-                toAdd = Counter(masterdict[month - 1][n])
-                masterdict[month - 1]["Total"] += Counter(masterdict[month-1]["Total"]) + toAdd
+            yesterday = today - delta
+            lastMonth = yesterday.month
 
-            makePlot(masterdict[month - 1]["Total"], 1)
+            for n in list(masterdict[lastMonth].keys()):
+                toAdd = Counter(masterdict[lastMonth][n])
+                masterdict[lastMonth]["Total"] += Counter(masterdict[lastMonth]["Total"]) + toAdd
+
+            makePlot(masterdict[lastMonth]["Total"], 1)
             sendEmail(user, 1)
+
         masterdict[month] = {}
 
     if day not in masterdict[month]:
-        masterdict[month][day] = {}
+
         if flag == 1:
-            makePlot(masterdict[month][day])
-            sendEmail(user)
+            yesterday = today - delta
+            if masterdict[yesterday.month]:
+                makePlot(masterdict[yesterday.month][yesterday.day])
+                sendEmail(user)
+
+        masterdict[month][day] = {}
 
     current = dataOven(10, username)
 
