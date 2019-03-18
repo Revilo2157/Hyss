@@ -189,6 +189,10 @@ def makePlot(dictionary, which = 0):
     else:
         plt.savefig('Top10Songs')
 
+today = datetime.datetime.today()
+day = today.day
+month = today.month
+
 try:
     f = open("HyssData", "rb")
     info = pickle.load(f)
@@ -216,12 +220,11 @@ except:
     print("Welcome!")
 
 leftOvers = dataOven(10, username)
-offset = datetime.timedelta(hours=5)
 delta = datetime.timedelta(days=1)
 
 while (True):
 
-    today = datetime.datetime.today() - offset
+    today = datetime.datetime.today()
     day = today.day
     month = today.month
 
