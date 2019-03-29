@@ -259,8 +259,11 @@ while (True):
         if flag == 1:
             yesterday = today - delta
             if masterdict[yesterday.month]:
-                makePlot(masterdict[yesterday.month][yesterday.day])
-                sendEmail(user)
+                try:
+                    makePlot(masterdict[yesterday.month][yesterday.day])
+                    sendEmail(user)
+                except:
+                    pass
 
         masterdict[month][day] = {}
 
