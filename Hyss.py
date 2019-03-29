@@ -24,6 +24,7 @@ import datetime
 import googleapiclient.errors as errors
 import pickle
 from collections import Counter
+from spotipy import oauth2 as auth
 
 def create_message_with_attachment(sender, to, subject, body, file = ""):
     message = MIMEMultipart()
@@ -129,14 +130,25 @@ def sendEmail(to, which = 0):
 
 def dataOven(num, username):
     scope = 'user-read-recently-played'
+    client_id = 'd59d161a8be9454ca86be7a9270c7a18'
+    client_secret = 'ed7384daaa9243c0b4435160d4e138a2'
+    redirect_uri = 'http://localhost/'
+
     token = util.prompt_for_user_token(username,
-                                       scope,
-                                       client_id='d59d161a8be9454ca86be7a9270c7a18',
-                                       client_secret='ed7384daaa9243c0b4435160d4e138a2',
-                                       redirect_uri='http://localhost/')
+                                       scope=scope,
+                                       client_id=client_id,
+                                       client_secret=client_secret,
+                                       redirect_uri=redirect_uri)
 
     sp = spotipy.Spotify(auth=token)
-    order = sp._get('me/player/recently-played', limit=num)
+    try:
+        order = sp._get('me/player/recently-played', limit=num)
+    except:
+        sp_oauth = auth.SpotifyOAuth(client_id, client_secret, redirect_uri,
+                                       scope=scope, cache_path=".cache-" + username)
+        token = sp_oauth.get_cached_token()["access_token"]
+        sp = spotipy.Spotify(auth=token)
+        order = sp._get('me/player/recently-played', limit=num)
 
     songs = []
     rawData = order['items']
