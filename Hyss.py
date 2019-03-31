@@ -141,14 +141,17 @@ def dataOven(num, username):
                                        redirect_uri=redirect_uri)
 
     sp = spotipy.Spotify(auth=token)
-    try:
-        order = sp._get('me/player/recently-played', limit=num)
-    except:
-        sp_oauth = auth.SpotifyOAuth(client_id, client_secret, redirect_uri,
-                                       scope=scope, cache_path=".cache-" + username)
-        token = sp_oauth.get_cached_token()["access_token"]
-        sp = spotipy.Spotify(auth=token)
-        order = sp._get('me/player/recently-played', limit=num)
+    while(True:)
+        try:
+            order = sp._get('me/player/recently-played', limit=num)
+            break
+        except:
+            sp_oauth = auth.SpotifyOAuth(client_id, client_secret, redirect_uri,
+                                           scope=scope, cache_path=".cache-" + username)
+            token = sp_oauth.get_cached_token()["access_token"]
+            sp = spotipy.Spotify(auth=token)
+            order = sp._get('me/player/recently-played', limit=num)
+            break
 
     songs = []
     rawData = order['items']
