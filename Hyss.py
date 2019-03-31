@@ -150,8 +150,7 @@ def dataOven(num, username):
                                            scope=scope, cache_path=".cache-" + username)
             token = sp_oauth.get_cached_token()["access_token"]
             sp = spotipy.Spotify(auth=token)
-            order = sp._get('me/player/recently-played', limit=num)
-            break
+            print("Token Expired. Retrying...")
 
     songs = []
     rawData = order['items']
