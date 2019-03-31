@@ -141,7 +141,7 @@ def dataOven(num, username):
                                        redirect_uri=redirect_uri)
 
     sp = spotipy.Spotify(auth=token)
-    while(True:)
+    while(True):
         try:
             order = sp._get('me/player/recently-played', limit=num)
             break
