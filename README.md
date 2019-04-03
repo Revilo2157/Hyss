@@ -13,5 +13,5 @@ Instructions:
 5. Sign in to spotify. It will take you to a page that cant be loaded. 
 6. Copy the link you are redirected to. It should look like https://localhost.com
 7. Go back to the console, add a space and paste the link you just copied.
-8. You shoul receive a confirmation email.
+8. You should receive a confirmation email.
 9. Enjoy!
