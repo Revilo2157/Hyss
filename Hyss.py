@@ -247,9 +247,13 @@ while (True):
             yesterday = today - delta
             lastMonth = yesterday.month
 
+            masterdict[lastMonth]["Total"] = Counter(songTracker)
+
             for n in list(masterdict[lastMonth].keys()):
+                if n == "Total":
+                    continue
                 toAdd = Counter(masterdict[lastMonth][n])
-                masterdict[lastMonth]["Total"] += Counter(masterdict[lastMonth]["Total"]) + toAdd
+                masterdict[lastMonth]["Total"] = Counter(masterdict[lastMonth]["Total"]) + toAdd
 
             makePlot(masterdict[lastMonth]["Total"], 1)
             sendEmail(user, 1)
@@ -257,7 +261,7 @@ while (True):
         masterdict[month] = {}
 
     if day not in masterdict[month]:
-
+        songTracker = {}
         if flag == 1:
             yesterday = today - delta
             if masterdict[yesterday.month]:
@@ -268,6 +272,9 @@ while (True):
                     pass
 
         masterdict[month][day] = {}
+        f = open("HyssData", "wb")
+        pickle.dump([masterdict, user, username], f)
+        f.close()
 
     current = dataOven(10, username)
 
@@ -277,6 +284,7 @@ while (True):
             songTracker[song] = 1
         else:
             songTracker[song] += 1
+
         masterdict[month][day] = songTracker
         f = open("HyssData", "wb")
         pickle.dump([masterdict, user, username], f)
