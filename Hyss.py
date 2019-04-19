@@ -1,3 +1,4 @@
+
 from __future__ import print_function
 import datetime
 from email.mime.base import MIMEBase
@@ -118,6 +119,11 @@ def sendEmail(to, which = 0):
         subject = "Song Data from %s" % (yesterday.strftime("%B"))
         body = "Top Ten Songs from %s!" % (yesterday.strftime("%B"))
         filename = "Top10Monthly.png"
+    elif which == 2:
+        lastWeek = today - datetime.timedelta(days=7)
+        subject = "Song Data from %s to %s" % (lastWeek.strftime("%D") , yesterday.strftime("%D"))
+        body = "Top Ten Songs from %s to %s!" % (lastWeek.strftime("%D") , yesterday.strftime("%D"))
+        filename = "Top10Weekly.png"
     else:
         subject = "Song Data from %d/%d" % (lastmonth, lastday)
         body = "Top Ten Songs from yesterday!"
@@ -200,8 +206,11 @@ def makePlot(dictionary, which = 0):
 
     if which == 1:
         plt.savefig('Top10Monthly')
+    elif which == 2:
+        plt.savefig('Top10Weekly')
     else:
         plt.savefig('Top10Songs')
+
 
 today = datetime.datetime.today()
 day = today.day
@@ -268,6 +277,23 @@ while (True):
                 try:
                     makePlot(masterdict[yesterday.month][yesterday.day])
                     sendEmail(user)
+                except:
+                    pass
+
+            if today.weekday() == 6:
+                weekData = {}
+                for n in range(1, 8):
+                    week = today - datetime.timedelta(days=n)
+                    weekMonth = week.month
+                    weekDay = week.day
+                    try:
+                        weekData = Counter(weekData) + Counter(masterdict[weekMonth][weekDay])
+                    except:
+                        pass
+
+                try:
+                    makePlot(weekData, 2)
+                    sendEmail(user, 2)
                 except:
                     pass
 
