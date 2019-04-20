@@ -323,6 +323,7 @@ while (True):
     leftOvers = current
 
     if flag != 1:
+        print("Sending Confirmation")
         sendVerif(user)
         flag = 1
 
