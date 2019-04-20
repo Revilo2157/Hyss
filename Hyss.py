@@ -323,8 +323,9 @@ while (True):
     leftOvers = current
 
     if flag != 1:
-        print("Sending Confirmation")
+        print("Sending Confirmation...")
         sendVerif(user)
+        print("Sent.")
         flag = 1
 
     sleep(5)
