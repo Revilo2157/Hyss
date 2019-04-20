@@ -138,7 +138,7 @@ def dataOven(num, username):
     scope = 'user-read-recently-played'
     client_id = 'd59d161a8be9454ca86be7a9270c7a18'
     client_secret = 'ed7384daaa9243c0b4435160d4e138a2'
-    redirect_uri = 'http://localhost/'
+    redirect_uri = 'http://oliverrodas.me/callback.html/'
 
     token = util.prompt_for_user_token(username,
                                        scope=scope,
