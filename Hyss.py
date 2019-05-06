@@ -186,20 +186,22 @@ def makePlot(dictionary, which = 0):
 
     top10 = []
     top10values = []
-    max = 10
+    numSongs = 10
 
     if len(inputData) < 10:
-        max = len(inputData)
+        numSongs = len(inputData)
 
-    for i in range(0, max):
+    for i in range(0, numSongs):
         song = inputData[i][0]
         listens = inputData[i][1]
         top10.append(song)
         top10values.append(listens)
     ticks = np.arange(len(top10))
+    print(top10)
     plt.figure(figsize=(10, 10))
     plt.barh(ticks, top10values, height=.5)
     plt.yticks(ticks, top10, fontsize=7.5)
+    plt.xticks(np.arange(0, max(top10values), step=1))
     plt.xlabel('Listens')
     plt.title('Top 10 Songs')
     plt.tight_layout()
