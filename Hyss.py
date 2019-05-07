@@ -350,4 +350,5 @@ while (True):
         print("Sent.")
         flag = 1
 
-    sleep(5)
+    while (datetime.datetime.now().minute != 59):
+        sleep(15)
