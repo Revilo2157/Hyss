@@ -218,8 +218,6 @@ today = datetime.datetime.today()
 day = today.day
 month = today.month
 
-works = False
-
 try:
     f = open("HyssData", "rb")
     info = pickle.load(f)
@@ -307,14 +305,33 @@ while (True):
         pickle.dump([masterdict, user, username], f)
         f.close()
 
-    current = dataOven(10, username)
+    current = dataOven(50, username)
 
     if leftOvers != current:
-        song = current[0][0]
-        if song not in songTracker:
-            songTracker[song] = 1
-        else:
-            songTracker[song] += 1
+        index = len(current) - 1
+        for n in range(0, len(current)):
+            if n <= (len(current) - 3):
+                if (current[n] == leftOvers[0] and
+                        current[n + 1] == leftOvers[1] and
+                        current[n + 2] == leftOvers[2]):
+                    index = n
+                    break
+            elif n <= (len(current) - 2):
+                if (current[n] == leftOvers[0] and
+                        current[n + 1] == leftOvers[1]):
+                    index = n
+                    break
+            else:
+                if current[n] == leftOvers[0]:
+                    index = n
+                    break
+
+        for i in range(0, index):
+            song = current[i][0]
+            if song not in songTracker:
+                songTracker[song] = 1
+            else:
+                songTracker[song] += 1
 
         masterdict[month][day] = songTracker
         f = open("HyssData", "wb")
@@ -332,8 +349,5 @@ while (True):
         sendVerif(user)
         print("Sent.")
         flag = 1
-
-    if not works:
-        pickle.dump("The Code has run correctly.", open("Works", "wb"))
 
     sleep(5)
