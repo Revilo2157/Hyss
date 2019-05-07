@@ -218,6 +218,8 @@ today = datetime.datetime.today()
 day = today.day
 month = today.month
 
+works = False
+
 try:
     f = open("HyssData", "rb")
     info = pickle.load(f)
@@ -330,5 +332,8 @@ while (True):
         sendVerif(user)
         print("Sent.")
         flag = 1
+
+    if not works:
+        pickle.dump("The Code has run correctly.", open("Works", "wb"))
 
     sleep(5)
