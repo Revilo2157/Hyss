@@ -201,7 +201,7 @@ def makePlot(dictionary, which = 0):
     plt.figure(figsize=(10, 10))
     plt.barh(ticks, top10values, height=.5)
     plt.yticks(ticks, top10, fontsize=7.5)
-    plt.xticks(np.arange(0, max(top10values), step=1))
+    plt.xticks(np.arange(0, max(top10values) + 1, step=1))
     plt.xlabel('Listens')
     plt.title('Top 10 Songs')
     plt.tight_layout()
@@ -244,7 +244,7 @@ except:
 
     print("Welcome!")
 
-leftOvers = dataOven(10, username)
+leftOvers = dataOven(50, username)
 delta = datetime.timedelta(days=1)
 
 while (True):
@@ -308,7 +308,7 @@ while (True):
     current = dataOven(50, username)
 
     if leftOvers != current:
-        index = len(current) - 1
+        index = len(current)
         for n in range(0, len(current)):
             if n <= (len(current) - 3):
                 if (current[n] == leftOvers[0] and
