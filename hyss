@@ -1,0 +1,9 @@
+#! /bin/bash
+
+cd /home/pi/Desktop/Hyss
+for user in  "Oliver" "Aubrey" "Paulina" "Joey" "Krystal"
+do
+	echo $user
+	python3 Hyss.py $user
+done
+

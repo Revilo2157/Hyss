@@ -26,6 +26,7 @@ import googleapiclient.errors as errors
 import pickle
 from collections import Counter
 from spotipy import oauth2 as auth
+import sys
 
 def create_message_with_attachment(sender, to, subject, body, file = ""):
     message = MIMEMultipart()
@@ -101,7 +102,7 @@ def sendVerif(to):
     send_message(service, message)
 
 def sendEmail(to, which = 0):
-
+    name = sys.argv[1]
     SCOPES = 'https://www.googleapis.com/auth/gmail.send'
     store = file.Storage('token.json')
     creds = store.get()
@@ -118,19 +119,23 @@ def sendEmail(to, which = 0):
     if which == 1:
         subject = "Song Data from %s" % (yesterday.strftime("%B"))
         body = "Top Ten Songs from %s!" % (yesterday.strftime("%B"))
-        filename = "Top10Monthly.png"
+        filename = name + "Top10Monthly.png"
     elif which == 2:
         lastWeek = today - datetime.timedelta(days=7)
         subject = "Song Data from %s to %s" % (lastWeek.strftime("%D") , yesterday.strftime("%D"))
         body = "Top Ten Songs from %s to %s!" % (lastWeek.strftime("%D") , yesterday.strftime("%D"))
-        filename = "Top10Weekly.png"
+        filename = name + "Top10Weekly.png"
     else:
         subject = "Song Data from %d/%d" % (lastmonth, lastday)
         body = "Top Ten Songs from yesterday!"
-        filename = "Top10Songs.png"
+        filename = name + "Top10Songs.png"
     sender = "HyssMusicTracker@gmail.com"
 
-    message = create_message_with_attachment(sender, to, subject, body, filename)
+    message = create_message_with_attachment(sender,
+                                             to,
+                                             subject,
+                                             body + "\n\n Thanks for subscribing, " + name + "!\n",
+                                             filename)
 
     send_message(service, message)
 
@@ -178,7 +183,7 @@ def getPlays(iterable):
     return iterable[1]
 
 def makePlot(dictionary, which = 0):
-
+    name = sys.argv[1]
     inputData = []
     for n in list(dictionary.keys()):
         inputData.append([n, dictionary[n]])
@@ -197,7 +202,6 @@ def makePlot(dictionary, which = 0):
         top10.append(song)
         top10values.append(listens)
     ticks = np.arange(len(top10))
-    print(top10)
     plt.figure(figsize=(10, 10))
     plt.barh(ticks, top10values, height=.5)
     plt.yticks(ticks, top10, fontsize=7.5)
@@ -207,24 +211,27 @@ def makePlot(dictionary, which = 0):
     plt.tight_layout()
 
     if which == 1:
-        plt.savefig('Top10Monthly')
+        plt.savefig(name + 'Top10Monthly')
     elif which == 2:
-        plt.savefig('Top10Weekly')
+        plt.savefig(name + 'Top10Weekly')
     else:
-        plt.savefig('Top10Songs')
-
+        plt.savefig(name + 'Top10Songs')
 
 today = datetime.datetime.today()
 day = today.day
 month = today.month
-
+name = sys.argv[1]
 try:
-    f = open("HyssData", "rb")
+    f = open(name + "HyssData", "rb")
     info = pickle.load(f)
     f.close()
     masterdict = info[0]
     user = info[1]
     username = info[2]
+    try:
+        leftOvers = info[3]
+    except:
+        leftOvers = {}
     flag = 1
     try:
         songTracker = masterdict[month][day]
@@ -238,77 +245,75 @@ except:
     username = input("Spotify Username: ")
     flag = 0
     songTracker = {}
+    leftOvers = {}
 
-    with open("HyssData", "wb") as newFile:
+    with open(name + "HyssData", "wb") as newFile:
         pickle.dump([masterdict, user, username], newFile)
 
     print("Welcome!")
 
-leftOvers = dataOven(50, username)
+if flag != 1:
+    print("Sending Confirmation...")
+    sendVerif(user)
+    print("Sent.")
+    flag = 1
+
 delta = datetime.timedelta(days=1)
 
-while (True):
+today = datetime.datetime.today()
+day = today.day
+month = today.month
 
-    today = datetime.datetime.today()
-    day = today.day
-    month = today.month
+if month not in masterdict:
+    if masterdict:
+        yesterday = today - delta
+        lastMonth = yesterday.month
 
-    if month not in masterdict:
-        if masterdict:
-            yesterday = today - delta
-            lastMonth = yesterday.month
+        if lastMonth in masterdict:
+            masterdict[lastMonth]["Total"] = Counter(songTracker)
 
-            if lastMonth in masterdict:
-                masterdict[lastMonth]["Total"] = Counter(songTracker)
+            for n in list(masterdict[lastMonth].keys()):
+                if n == "Total":
+                    continue
+                toAdd = Counter(masterdict[lastMonth][n])
+                masterdict[lastMonth]["Total"] = Counter(masterdict[lastMonth]["Total"]) + toAdd
 
-                for n in list(masterdict[lastMonth].keys()):
-                    if n == "Total":
-                        continue
-                    toAdd = Counter(masterdict[lastMonth][n])
-                    masterdict[lastMonth]["Total"] = Counter(masterdict[lastMonth]["Total"]) + toAdd
+            makePlot(masterdict[lastMonth]["Total"], 1)
+            sendEmail(user, 1)
 
-                makePlot(masterdict[lastMonth]["Total"], 1)
-                sendEmail(user, 1)
+    masterdict[month] = {}
 
-        masterdict[month] = {}
-
-    if day not in masterdict[month]:
-        songTracker = {}
-        if flag == 1:
-            yesterday = today - delta
-            #if masterdict[yesterday.month]:
-                # try:
-                #     makePlot(masterdict[yesterday.month][yesterday.day])
-                #     sendEmail(user)
-                # except:
-                #     pass
-
-            if today.weekday() == 6:
-                weekData = {}
-                for n in range(1, 8):
-                    week = today - datetime.timedelta(days=n)
-                    weekMonth = week.month
-                    weekDay = week.day
-                    try:
-                        weekData = Counter(weekData) + Counter(masterdict[weekMonth][weekDay])
-                    except:
-                        pass
-
+if day not in masterdict[month]:
+    songTracker = {}
+    if flag == 1:
+        yesterday = today - delta
+        if today.weekday() == 6:
+            weekData = {}
+            for n in range(1, 8):
+                week = today - datetime.timedelta(days=n)
+                weekMonth = week.month
+                weekDay = week.day
                 try:
-                    makePlot(weekData, 2)
-                    sendEmail(user, 2)
+                    weekData = Counter(weekData) + Counter(masterdict[weekMonth][weekDay])
                 except:
                     pass
 
-        masterdict[month][day] = {}
-        f = open("HyssData", "wb")
-        pickle.dump([masterdict, user, username], f)
-        f.close()
+            try:
+                makePlot(weekData, 2)
+                sendEmail(user, 2)
+            except:
+                pass
 
-    current = dataOven(50, username)
+    masterdict[month][day] = {}
+    f = open(name + "HyssData", "wb")
+    pickle.dump([masterdict, user, username], f)
+    f.close()
 
-    if leftOvers != current:
-        index = len(current)
+current = dataOven(50, username)
+
+if leftOvers != current:
+    index = len(current)
+    if leftOvers:
         for n in range(0, len(current)):
             if n <= (len(current) - 3):
                 if (current[n] == leftOvers[0] and
@@ -326,29 +331,24 @@ while (True):
                     index = n
                     break
 
-        for i in range(0, index):
-            song = current[i][0]
-            if song not in songTracker:
-                songTracker[song] = 1
-            else:
-                songTracker[song] += 1
-
-        masterdict[month][day] = songTracker
-        f = open("HyssData", "wb")
-        pickle.dump([masterdict, user, username], f)
-        f.close()
-
-        # print('\n\nRecently Played')
-        # for n in current:
-        #     print(n[0])
+    for i in range(0, index):
+        song = current[i][0]
+        if song not in songTracker:
+            songTracker[song] = 1
+        else:
+            songTracker[song] += 1
 
     leftOvers = current
 
-    if flag != 1:
-        print("Sending Confirmation...")
-        sendVerif(user)
-        print("Sent.")
-        flag = 1
+    masterdict[month][day] = songTracker
+    f = open(name + "HyssData", "wb")
+    pickle.dump([masterdict, user, username, leftOvers], f)
+    f.close()
 
-    while (datetime.datetime.now().minute != 59):
-        sleep(15)
+    print("Added")
+
+    # print('\n\nRecently Played')
+    # for n in current:
+    #     print(n[0])
+
+leftOvers = current
